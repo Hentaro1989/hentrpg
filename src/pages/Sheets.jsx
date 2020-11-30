@@ -52,6 +52,7 @@ const Sheets = () => {
         className={classes.addSheetButton}
         variant="contained"
         color="primary"
+        fullWidth
         onClick={async () => {
           const snapshot = await database.ref('sheets').once('value');
           const characterName = snapshot.val()?.[auth.currentUser.uid];
