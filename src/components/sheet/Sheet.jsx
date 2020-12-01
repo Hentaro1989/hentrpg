@@ -18,7 +18,7 @@ import firebase from '../../firebase';
 
 const database = firebase.database();
 
-const Sheet = ({ username, isMine }) => {
+const Sheet = ({ username, isMine, isGM }) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   return (
@@ -82,7 +82,7 @@ const Sheet = ({ username, isMine }) => {
             color="secondary"
             variant="contained"
             size="small"
-            disabled={!isMine}
+            disabled={!isMine && !isGM}
             onClick={() => setIsDeleteDialogOpen(true)}
           >
             シートを削除
@@ -99,7 +99,7 @@ const Sheet = ({ username, isMine }) => {
             キャンセル
           </Button>
           <Button
-            disabled={!isMine}
+            disabled={!isMine && !isGM}
             onClick={async () => {
               setIsDeleteDialogOpen(false);
               await database.ref(`sheets/${username}`).remove();

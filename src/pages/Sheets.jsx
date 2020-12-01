@@ -25,25 +25,34 @@ const Sheets = () => {
   const classes = useStyles();
   const [sheets, setSheets] = useState([]);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isGM, setIsGM] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    database.ref('sheets').on('value', (snapshot) => {
-      const sheetList = snapshot.val();
-      if (!sheetList) {
-        setSheets([]);
-        return;
-      }
+    if (auth.currentUser.uid) {
+      database.ref('sheets').on('value', (snapshot) => {
+        const sheetList = snapshot.val();
+        if (!sheetList) {
+          setSheets([]);
+          return;
+        }
 
-      const sheetElements = Object.entries(sheetList).map(([uid, username], i) => (
-        <Sheet username={username} isMine={uid === auth.currentUser.uid} key={i} />
-      ));
-      setSheets(sheetElements);
-    });
+        const sheetElements = Object.entries(sheetList).map(([uid, username], i) => (
+          <Sheet username={username} isMine={uid === auth.currentUser.uid} isGM={isGM} key={i} />
+        ));
+        setSheets(sheetElements);
+      });
+
+      database.ref(`settings/${auth.currentUser.uid}/isGM`).on('value', (snapshot) => {
+        setIsGM(!!snapshot.val());
+      });
+    }
+
     return () => {
       database.ref('sheets').off('value');
+      database.ref(`settings/${auth.currentUser.uid}/isGM`).off('value');
     };
-  }, []);
+  }, [auth.currentUser?.uid]);
 
   return (
     <div className={classes.root}>
