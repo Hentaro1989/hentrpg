@@ -7,6 +7,7 @@ import Settings from './pages/Settings';
 import Sheets from './pages/Sheets';
 import SignIn from './pages/SignIn';
 import firebase from './firebase';
+import { CircularProgress, makeStyles } from '@material-ui/core';
 
 const auth = firebase.auth();
 
@@ -18,18 +19,43 @@ export const PATHS = {
   SETTINGS: '/sheets/settings',
 };
 
+const useStyle = makeStyles((theme) => ({
+  loading: {
+    position: 'fixed',
+    left: '50%',
+    top: '50%',
+    width: '100%',
+    height: 'auto',
+    textAlign: 'center',
+    transform: 'translate(-50%, -50%)',
+  },
+}));
+
 const PrivateRoute = ({ exact, path, isLoggedIn, children }) => {
-  return isLoggedIn ? (
-    <Route exact={exact} path={path}>
-      {children}
-    </Route>
-  ) : (
-    <Redirect to={PATHS.SIGNIN} />
-  );
+  const classes = useStyle();
+
+  switch (isLoggedIn) {
+    case true:
+      return (
+        <Route exact={exact} path={path}>
+          {children}
+        </Route>
+      );
+    case false:
+      return <Redirect to={PATHS.SIGNIN} />;
+    default:
+      return (
+        <Route exact={exact} path={path}>
+          <div className={classes.loading}>
+            <CircularProgress size="30%" />
+          </div>
+        </Route>
+      );
+  }
 };
 
 const Router = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(null);
 
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
@@ -53,22 +79,18 @@ const Router = () => {
         <Route exact path={PATHS.REGISTER}>
           <Register />
         </Route>
-        {isLoggedIn ? (
-          <PrivateRoute path={PATHS.SHEETS} isLoggedIn={isLoggedIn}>
-            <Layout>
-              <Switch>
-                <Route exact path={PATHS.SHEETS}>
-                  <Sheets />
-                </Route>
-                <Route exact path={PATHS.SETTINGS}>
-                  <Settings />
-                </Route>
-              </Switch>
-            </Layout>
-          </PrivateRoute>
-        ) : (
-          <></>
-        )}
+        <PrivateRoute path={PATHS.SHEETS} isLoggedIn={isLoggedIn}>
+          <Layout>
+            <Switch>
+              <Route exact path={PATHS.SHEETS}>
+                <Sheets />
+              </Route>
+              <Route exact path={PATHS.SETTINGS}>
+                <Settings />
+              </Route>
+            </Switch>
+          </Layout>
+        </PrivateRoute>
         <Route exact path="*">
           <NotFound />
         </Route>
