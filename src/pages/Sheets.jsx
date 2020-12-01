@@ -27,9 +27,11 @@ const Sheets = () => {
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [isGM, setIsGM] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [myUid, setMyUid] = useState('');
 
   useEffect(() => {
     if (auth.currentUser.uid) {
+      setMyUid(auth.currentUser.uid);
       database.ref('sheets').on('value', (snapshot) => {
         const sheetList = snapshot.val();
         if (!sheetList) {
@@ -38,19 +40,20 @@ const Sheets = () => {
         }
 
         const sheetElements = Object.entries(sheetList).map(([uid, username], i) => (
-          <Sheet username={username} isMine={uid === auth.currentUser.uid} isGM={isGM} key={i} />
+          <Sheet username={username} isMine={uid === myUid} isGM={isGM} key={i} />
         ));
         setSheets(sheetElements);
       });
 
-      database.ref(`settings/${auth.currentUser.uid}/isGM`).on('value', (snapshot) => {
+      database.ref(`settings/${myUid}/isGM`).on('value', (snapshot) => {
         setIsGM(!!snapshot.val());
       });
     }
 
     return () => {
       database.ref('sheets').off('value');
-      database.ref(`settings/${auth.currentUser.uid}/isGM`).off('value');
+      database.ref(`settings/${myUid}/isGM`).off('value');
+      setMyUid('');
     };
   }, [auth.currentUser?.uid]);
 
