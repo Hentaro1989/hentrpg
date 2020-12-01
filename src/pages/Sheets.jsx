@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Snackbar } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
@@ -29,37 +29,34 @@ const Sheets = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [myUid, setMyUid] = useState('');
 
+  const sheetElements = useMemo(() => {
+    return Object.entries(sheets).map(([uid, username], i) => (
+      <Sheet username={username} isMine={uid === myUid} isGM={isGM} key={i} />
+    ));
+  }, [sheets, isGM]);
+
   useEffect(() => {
     if (auth.currentUser.uid) {
-      setMyUid(auth.currentUser.uid);
       database.ref('sheets').on('value', (snapshot) => {
-        const sheetList = snapshot.val();
-        if (!sheetList) {
-          setSheets([]);
-          return;
-        }
-
-        const sheetElements = Object.entries(sheetList).map(([uid, username], i) => (
-          <Sheet username={username} isMine={uid === myUid} isGM={isGM} key={i} />
-        ));
-        setSheets(sheetElements);
+        setSheets(snapshot.val() || []);
       });
 
-      database.ref(`settings/${myUid}/isGM`).on('value', (snapshot) => {
+      database.ref(`settings/${auth.currentUser.uid}/isGM`).on('value', (snapshot) => {
         setIsGM(!!snapshot.val());
       });
+
+      setMyUid(auth.currentUser.uid);
     }
 
     return () => {
       database.ref('sheets').off('value');
       database.ref(`settings/${myUid}/isGM`).off('value');
-      setMyUid('');
     };
-  }, [auth.currentUser?.uid]);
+  }, [auth.currentUser?.uid, myUid]);
 
   return (
     <div className={classes.root}>
-      {sheets}
+      {sheetElements}
       <Button
         className={classes.addSheetButton}
         variant="contained"
