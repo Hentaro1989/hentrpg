@@ -260,7 +260,7 @@ const Settings = () => {
     <>
       <List className={classes.root}>
         <ListItem>
-          <ListSubheader component="div">個人オプション</ListSubheader>
+          <ListSubheader component="div">個人用オプション</ListSubheader>
         </ListItem>
         <ListItem button onClick={() => setIsNameChangeDialogOpen(true)}>
           <ListItemIcon>
@@ -270,7 +270,7 @@ const Settings = () => {
           {auth.currentUser?.displayName}
         </ListItem>
         <ListItem>
-          <ListSubheader component="div">共通オプション</ListSubheader>
+          <ListSubheader component="div">共用オプション</ListSubheader>
         </ListItem>
         <ListItem button onClick={toggleIsGM}>
           <ListItemIcon>
