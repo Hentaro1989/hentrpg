@@ -84,6 +84,7 @@ const Settings = () => {
           return prev;
         }, {}),
       });
+      setIsGM(!isGM);
     }
   }, [isGM, auth.currentUser?.uid]);
 
