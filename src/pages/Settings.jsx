@@ -363,9 +363,9 @@ const Settings = () => {
               request[`settings/template/fields/${target.key}`] = null;
             }
 
+            setIsDeleteModalOpen(false);
             await database.ref().update(request);
             setTarget({ type: '', key: '', name: '' });
-            setIsDeleteModalOpen(false);
           }}
         >
           <DialogTitle>{targetType.label}の削除</DialogTitle>
