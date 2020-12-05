@@ -86,7 +86,7 @@ const Settings = () => {
       });
       setIsGM(!isGM);
     }
-  }, [isGM, sheets, auth.currentUser?.uid]);
+  }, [isGM, sheets]);
 
   const targetType = useMemo(() => {
     if (target.type === 'category') {
@@ -215,7 +215,7 @@ const Settings = () => {
         </Button>
       </>
     );
-  }, [categories, fields, sheets]);
+  }, [categories, fields, sheets, classes]);
 
   useEffect(() => {
     database.ref(`sheets`).on('value', (snapshot) => {
@@ -230,27 +230,25 @@ const Settings = () => {
       setFields(snapshot.val() || {});
     });
 
-    if (auth.currentUser?.uid) {
-      database.ref(`settings/${auth.currentUser?.uid}`).on('value', (snapshot) => {
-        const settings = snapshot.val();
-        if (!settings) {
-          setIsGM(false);
-          return;
-        }
-        setIsGM(!!settings.isGM);
+    database.ref(`settings/${auth.currentUser?.uid}`).on('value', (snapshot) => {
+      const settings = snapshot.val();
+      if (!settings) {
+        setIsGM(false);
+        return;
+      }
+      setIsGM(!!settings.isGM);
 
-        if (!isLoaded) {
-          setIsLoaded(true);
-        }
-      });
-    }
+      if (!isLoaded) {
+        setIsLoaded(true);
+      }
+    });
 
     return async () => {
       database.ref(`settings/${auth.currentUser?.uid}`).off('value');
       database.ref(`settings/template/categories`).off('value');
       database.ref(`settings/template/fields`).off('value');
     };
-  }, [auth.currentUser?.uid]);
+  }, [isLoaded]);
 
   if (!isLoaded) {
     return <></>;

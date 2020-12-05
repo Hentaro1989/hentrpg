@@ -4,7 +4,7 @@ import { Button, Snackbar } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import firebase from '../firebase';
 import { Alert } from '@material-ui/lab';
-import Sheet from '../components/sheet/Sheet';
+import Sheet from '../components/Sheet';
 
 const auth = firebase.auth();
 const database = firebase.database();
@@ -31,28 +31,26 @@ const Sheets = () => {
 
   const sheetElements = useMemo(() => {
     return Object.entries(sheets).map(([uid, username], i) => (
-      <Sheet username={username} isMine={uid === myUid} isGM={isGM} key={i} />
+      <Sheet username={username} uid={uid} isMine={uid === myUid} isGM={isGM} key={i} />
     ));
-  }, [sheets, isGM]);
+  }, [sheets, isGM, myUid]);
 
   useEffect(() => {
-    if (auth.currentUser.uid) {
-      database.ref('sheets').on('value', (snapshot) => {
-        setSheets(snapshot.val() || []);
-      });
+    database.ref('sheets').on('value', (snapshot) => {
+      setSheets(snapshot.val() || []);
+    });
 
-      database.ref(`settings/${auth.currentUser.uid}/isGM`).on('value', (snapshot) => {
-        setIsGM(!!snapshot.val());
-      });
+    database.ref(`settings/${auth.currentUser.uid}/isGM`).on('value', (snapshot) => {
+      setIsGM(!!snapshot.val());
+    });
 
-      setMyUid(auth.currentUser.uid);
-    }
+    setMyUid(auth.currentUser.uid);
 
     return () => {
       database.ref('sheets').off('value');
       database.ref(`settings/${myUid}/isGM`).off('value');
     };
-  }, [auth.currentUser?.uid, myUid]);
+  }, [myUid]);
 
   return (
     <div className={classes.root}>
