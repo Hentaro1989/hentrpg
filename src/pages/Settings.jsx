@@ -368,11 +368,9 @@ const Settings = () => {
         >
           <DialogTitle>{targetType.label}の削除</DialogTitle>
           <DialogContent>
+            <Typography variant="body1">全プレイヤーの{targetType.label}に保存された値も削除されます。</Typography>
             <Typography variant="body1">
-              {targetType.label}削除により全プレイヤーのシートからも同名の{targetType.label}が削除されます。
-            </Typography>
-            <Typography variant="body1">
-              本当に{targetType.label}「{target.name || `無名の${targetType.label}`}」を削除しますか？
+              本当に「{target.name || `無名の${targetType.label}`}」を削除しますか？
             </Typography>
           </DialogContent>
           <DialogActions>
