@@ -16,7 +16,6 @@ import {
   Grid,
   TextField,
   makeStyles,
-  withStyles,
 } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import firebase from '../firebase';
@@ -41,13 +40,18 @@ const useStyle = makeStyles((theme) => ({
     marginBottom: theme.spacing(1),
     color: 'greenyellow',
   },
+  gmMark: {
+    marginLeft: theme.spacing(1),
+    color: 'yellow',
+  },
   divider: {
     marginBottom: theme.spacing(1),
   },
 }));
 
-const Sheet = ({ username, uid, isMine, isGM, focusFields }) => {
+const Sheet = ({ username, sheetUid, gmUid, focusFields }) => {
   const classes = useStyle();
+  const [myUid, setMyUid] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [categories, setCategories] = useState({});
   const [fields, setFields] = useState({});
@@ -57,7 +61,7 @@ const Sheet = ({ username, uid, isMine, isGM, focusFields }) => {
     window.sessionStorage.setItem('sheetExpandingStatus', JSON.stringify(newState));
     return newState;
   }, JSON.parse(window.sessionStorage.getItem('sheetExpandingStatus') || '{}'));
-
+  const isMine = useMemo(() => sheetUid === auth.currentUser.uid, [sheetUid]);
   const contents = useMemo(() => {
     return Object.entries(categories).map(([categoryId, category]) => {
       return (
@@ -69,7 +73,9 @@ const Sheet = ({ username, uid, isMine, isGM, focusFields }) => {
           <Grid container>
             {Object.entries(fields[categoryId] || {}).map(([fieldId, field]) => {
               const focusingUsernames = Object.entries(focusFields)
-                .filter(([_, f]) => f.focusedSheetUid === uid && f.categoryId === categoryId && f.fieldId === fieldId)
+                .filter(
+                  ([_, f]) => f.focusedSheetUid === sheetUid && f.categoryId === categoryId && f.fieldId === fieldId,
+                )
                 .map(([_, f]) => f.username);
               return (
                 <Grid item xs={12} md={6} lg={3} className={classes.field} key={fieldId}>
@@ -80,18 +86,18 @@ const Sheet = ({ username, uid, isMine, isGM, focusFields }) => {
                     onFocus={async () => {
                       await database.ref(`focus/${auth.currentUser.uid}`).set({
                         username: auth.currentUser.displayName,
-                        focusedSheetUid: uid,
+                        focusedSheetUid: sheetUid,
                         categoryId,
                         fieldId,
                       });
                     }}
-                    // onBlur={async () => {
-                    //   await database.ref(`focus/${auth.currentUser.uid}`).remove();
-                    // }}
-                    onChange={async (event) => {
-                      await database.ref(`fields/${uid}/${categoryId}/${fieldId}/value`).set(event.target.value);
+                    onBlur={async () => {
+                      await database.ref(`focus/${auth.currentUser.uid}`).remove();
                     }}
-                    disabled={!isMine && !isGM}
+                    onChange={async (event) => {
+                      await database.ref(`fields/${sheetUid}/${categoryId}/${fieldId}/value`).set(event.target.value);
+                    }}
+                    disabled={!isMine && gmUid !== auth.currentUser.uid}
                     variant="outlined"
                     size="small"
                     fullWidth
@@ -103,31 +109,38 @@ const Sheet = ({ username, uid, isMine, isGM, focusFields }) => {
         </Paper>
       );
     });
-  }, [categories, fields, focusFields, uid, isMine, isGM, classes]);
+  }, [categories, fields, focusFields, sheetUid, isMine, gmUid, classes]);
 
   useEffect(() => {
-    database.ref(`categories/${uid}`).on('value', (snapshot) => {
+    database.ref(`categories/${sheetUid}`).on('value', (snapshot) => {
       setCategories(snapshot.val() || {});
     });
 
-    database.ref(`fields/${uid}`).on('value', (snapshot) => {
+    database.ref(`fields/${sheetUid}`).on('value', (snapshot) => {
       setFields(snapshot.val() || {});
     });
 
+    // When you logged out, "auth.currentUser" will be gone.
+    // So you need to save uid as a state for unsubscribing.
+    setMyUid(auth.currentUser.uid);
+
     return () => {
-      database.ref(`categories/${uid}`).off('value');
-      database.ref(`fields/${uid}`).off('value');
+      database.ref(`categories/${sheetUid}`).off('value');
+      database.ref(`fields/${sheetUid}`).off('value');
     };
-  }, [uid]);
+  }, [sheetUid, myUid]);
 
   return (
     <>
       <Accordion
-        expanded={!!expandedState[uid]}
-        onChange={(_, expanded) => setExpandedState({ uid, isExpanded: expanded })}
+        expanded={!!expandedState[sheetUid]}
+        onChange={(_, expanded) => setExpandedState({ uid: sheetUid, isExpanded: expanded })}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography>{username}</Typography>
+          <Typography>
+            {username}
+            {gmUid === sheetUid ? <span className={classes.gmMark}>GM</span> : undefined}
+          </Typography>
         </AccordionSummary>
         <AccordionDetails>{contents}</AccordionDetails>
         <Divider />
@@ -136,7 +149,7 @@ const Sheet = ({ username, uid, isMine, isGM, focusFields }) => {
             color="secondary"
             variant="contained"
             size="small"
-            disabled={!isMine && !isGM}
+            disabled={!isMine && gmUid !== auth.currentUser.uid}
             onClick={() => setIsDeleteDialogOpen(true)}
           >
             シートを削除
@@ -153,7 +166,7 @@ const Sheet = ({ username, uid, isMine, isGM, focusFields }) => {
             キャンセル
           </Button>
           <Button
-            disabled={!isMine && !isGM}
+            disabled={!isMine && gmUid !== auth.currentUser.uid}
             onClick={async () => {
               setIsDeleteDialogOpen(false);
               await database.ref(`sheets/${username}`).remove();

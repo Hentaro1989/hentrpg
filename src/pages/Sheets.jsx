@@ -24,19 +24,18 @@ const useStyles = makeStyles((theme) => ({
 const Sheets = () => {
   const classes = useStyles();
   const [sheets, setSheets] = useState({});
+  const [gmUid, setGmUid] = useState(null);
   const [focusFields, setFocusFields] = useState({});
   const [isAlertOpen, setIsAlertOpen] = useState(false);
-  const [isGM, setIsGM] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [myUid, setMyUid] = useState('');
 
   const sheetElements = useMemo(() => {
     return Object.entries(sheets)
-      .sort(([uid]) => (uid === myUid ? -1 : 1))
+      .sort(([uid]) => (uid === auth.currentUser.uid ? -1 : 1))
       .map(([uid, username], i) => (
-        <Sheet username={username} uid={uid} isMine={uid === myUid} isGM={isGM} focusFields={focusFields} key={i} />
+        <Sheet username={username} sheetUid={uid} gmUid={gmUid} focusFields={focusFields} key={i} />
       ));
-  }, [sheets, isGM, myUid, focusFields]);
+  }, [sheets, focusFields, gmUid]);
 
   useEffect(() => {
     database.ref('sheets').on('value', (snapshot) => {
@@ -47,20 +46,18 @@ const Sheets = () => {
       setFocusFields(snapshot.val() || {});
     });
 
-    database.ref(`settings/${auth.currentUser.uid}/isGM`).on('value', (snapshot) => {
-      setIsGM(!!snapshot.val());
+    database.ref(`settings/global/gm`).on('value', (snapshot) => {
+      setGmUid(snapshot.val());
     });
 
     database.ref(`focus/${auth.currentUser.uid}`).remove();
 
-    setMyUid(auth.currentUser.uid);
-
     return () => {
       database.ref('sheets').off('value');
       database.ref(`focus`).off('value');
-      database.ref(`settings/${myUid}/isGM`).off('value');
+      database.ref(`settings/global/gm`).off('value');
     };
-  }, [myUid]);
+  }, []);
 
   return (
     <div className={classes.root}>

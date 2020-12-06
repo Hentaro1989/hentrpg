@@ -64,8 +64,7 @@ const Transition = React.forwardRef((props, ref) => <Slide direction="up" ref={r
 
 const Settings = () => {
   const classes = useStyles();
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isGM, setIsGM] = useState(false);
+  const [gmUid, setGmUid] = useState(null);
   const [isNameChangeDialogOpen, setIsNameChangeDialogOpen] = useState(false);
   const [isTemplateOpen, setIsTemplateOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -75,18 +74,11 @@ const Settings = () => {
   const [fields, setFields] = useState({});
   const [target, setTarget] = useState({ type: '', key: '', name: '' });
 
-  const toggleIsGM = useCallback(async () => {
-    if (auth.currentUser?.uid) {
-      const uids = Object.keys(sheets);
-      await database.ref().update({
-        ...uids.reduce((prev, uid) => {
-          prev[`settings/${uid}/isGM`] = uid === auth.currentUser?.uid ? !isGM : false;
-          return prev;
-        }, {}),
-      });
-      setIsGM(!isGM);
-    }
-  }, [isGM, sheets]);
+  const toggleGM = useCallback(async () => {
+    const updated = gmUid ? null : auth.currentUser.uid;
+    await database.ref(`settings/global/gm`).set(updated);
+    setGmUid(updated);
+  }, [gmUid]);
 
   const targetType = useMemo(() => {
     if (target.type === 'category') {
@@ -111,7 +103,7 @@ const Settings = () => {
                 const newCategoryName = event.target.value;
                 const uids = Object.keys(sheets);
                 await database.ref().update({
-                  [`settings/template/categories/${categoryKey}`]: newCategoryName,
+                  [`settings/global/template/categories/${categoryKey}`]: newCategoryName,
                   ...uids.reduce((prev, uid) => {
                     prev[`categories/${uid}/${categoryKey}/name`] = newCategoryName;
                     return prev;
@@ -144,7 +136,7 @@ const Settings = () => {
                     const newFieldName = event.target.value;
                     const uids = Object.keys(sheets);
                     await database.ref().update({
-                      [`settings/template/fields/${categoryKey}/${fieldKey}`]: newFieldName,
+                      [`settings/global/template/fields/${categoryKey}/${fieldKey}`]: newFieldName,
                       ...uids.reduce((prev, uid) => {
                         prev[`fields/${uid}/${categoryKey}/${fieldKey}/name`] = newFieldName;
                         return prev;
@@ -175,10 +167,10 @@ const Settings = () => {
               color="primary"
               fullWidth
               onClick={async () => {
-                const newFieldKey = database.ref(`settings/template/fields`).push().key;
+                const newFieldKey = database.ref(`settings/global/template/fields`).push().key;
                 const uids = Object.keys(sheets);
                 await database.ref().update({
-                  [`settings/template/fields/${categoryKey}/${newFieldKey}`]: '',
+                  [`settings/global/template/fields/${categoryKey}/${newFieldKey}`]: '',
                   ...uids.reduce((prev, uid) => {
                     prev[`fields/${uid}/${categoryKey}/${newFieldKey}/name`] = '';
                     return prev;
@@ -200,10 +192,10 @@ const Settings = () => {
           color="primary"
           fullWidth
           onClick={async () => {
-            const newCategoryKey = database.ref(`settings/template/categories`).push().key;
+            const newCategoryKey = database.ref(`settings/global/template/categories`).push().key;
             const uids = Object.keys(sheets);
             await database.ref().update({
-              [`settings/template/categories/${newCategoryKey}`]: '',
+              [`settings/global/template/categories/${newCategoryKey}`]: '',
               ...uids.reduce((prev, uid) => {
                 prev[`categories/${uid}/${newCategoryKey}/name`] = '';
                 return prev;
@@ -222,37 +214,25 @@ const Settings = () => {
       setSheets(snapshot.val() || {});
     });
 
-    database.ref(`settings/template/categories`).on('value', (snapshot) => {
+    database.ref(`settings/global/template/categories`).on('value', (snapshot) => {
       setCategories(snapshot.val() || {});
     });
 
-    database.ref(`settings/template/fields`).on('value', (snapshot) => {
+    database.ref(`settings/global/template/fields`).on('value', (snapshot) => {
       setFields(snapshot.val() || {});
     });
 
-    database.ref(`settings/${auth.currentUser?.uid}`).on('value', (snapshot) => {
-      const settings = snapshot.val();
-      if (!settings) {
-        setIsGM(false);
-        return;
-      }
-      setIsGM(!!settings.isGM);
-
-      if (!isLoaded) {
-        setIsLoaded(true);
-      }
+    database.ref(`settings/global/gm`).on('value', (snapshot) => {
+      setGmUid(snapshot.val());
     });
 
     return async () => {
-      database.ref(`settings/${auth.currentUser?.uid}`).off('value');
-      database.ref(`settings/template/categories`).off('value');
-      database.ref(`settings/template/fields`).off('value');
+      database.ref(`sheets`).off('value');
+      database.ref(`settings/global/template/categories`).off('value');
+      database.ref(`settings/global/template/fields`).off('value');
+      database.ref(`settings/global/gm`).off('value');
     };
-  }, [isLoaded]);
-
-  if (!isLoaded) {
-    return <></>;
-  }
+  }, []);
 
   return (
     <>
@@ -270,13 +250,13 @@ const Settings = () => {
         <ListItem>
           <ListSubheader component="div">共用オプション</ListSubheader>
         </ListItem>
-        <ListItem button onClick={toggleIsGM}>
+        <ListItem button onClick={toggleGM}>
           <ListItemIcon>
             <SupervisorAccountIcon />
           </ListItemIcon>
           <ListItemText primary="GM権限" />
           <ListItemSecondaryAction>
-            <Switch edge="end" checked={isGM} onClick={toggleIsGM} />
+            <Switch edge="end" checked={gmUid === auth.currentUser.uid} onClick={toggleGM} />
           </ListItemSecondaryAction>
         </ListItem>
         <ListItem button onClick={() => setIsTemplateOpen(true)}>
@@ -347,7 +327,7 @@ const Settings = () => {
             event.preventDefault();
             const uids = Object.keys(sheets);
             const request = {
-              [`settings/template/${targetType.pathName}/${target.key}`]: null,
+              [`settings/global/template/${targetType.pathName}/${target.key}`]: null,
               ...uids.reduce((prev, uid) => {
                 prev[`${targetType.pathName}/${uid}/${target.key}`] = null;
                 if (targetType.pathName === 'categories') {
@@ -358,7 +338,7 @@ const Settings = () => {
             };
 
             if (targetType.pathName === 'categories') {
-              request[`settings/template/fields/${target.key}`] = null;
+              request[`settings/global/template/fields/${target.key}`] = null;
             }
 
             setIsDeleteModalOpen(false);
