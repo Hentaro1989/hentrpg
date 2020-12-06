@@ -16,18 +16,19 @@ import {
   Grid,
   TextField,
   makeStyles,
-  Toolbar,
 } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import firebase from '../firebase';
 
-const auth = firebase.auth();
 const database = firebase.database();
 
 const useStyle = makeStyles((theme) => ({
   category: {
     width: '100%',
     padding: theme.spacing(1),
+  },
+  categoryHeader: {
+    margin: theme.spacing(1, 2),
   },
   field: {
     padding: theme.spacing(1),
@@ -46,15 +47,25 @@ const Sheet = ({ username, uid, isMine, isGM }) => {
     return Object.entries(categories).map(([categoryId, category]) => {
       return (
         <Paper key={categoryId} className={classes.category} variant="outlined">
-          <Toolbar>
-            <Typography variant="h5">{category.name}</Typography>
-          </Toolbar>
+          <Typography variant="subtitle1" className={classes.categoryHeader}>
+            {category.name}
+          </Typography>
           <Divider className={classes.divider} />
           <Grid container>
             {Object.entries(fields[categoryId] || {}).map(([fieldId, field]) => {
               return (
                 <Grid item xs={12} md={6} lg={3} className={classes.field} key={fieldId}>
-                  <TextField label={field.name} disabled={!isMine && !isGM} variant="outlined" size="small" fullWidth />
+                  <TextField
+                    label={field.name}
+                    value={field.value || ''}
+                    onChange={async (event) => {
+                      await database.ref(`fields/${uid}/${categoryId}/${fieldId}/value`).set(event.target.value);
+                    }}
+                    disabled={!isMine && !isGM}
+                    variant="outlined"
+                    size="small"
+                    fullWidth
+                  />
                 </Grid>
               );
             })}
@@ -62,7 +73,7 @@ const Sheet = ({ username, uid, isMine, isGM }) => {
         </Paper>
       );
     });
-  }, [categories, fields, isMine, isGM, classes]);
+  }, [categories, fields, uid, isMine, isGM, classes]);
 
   useEffect(() => {
     database.ref(`categories/${uid}`).on('value', (snapshot) => {

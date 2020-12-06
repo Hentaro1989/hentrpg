@@ -30,9 +30,9 @@ const Sheets = () => {
   const [myUid, setMyUid] = useState('');
 
   const sheetElements = useMemo(() => {
-    return Object.entries(sheets).map(([uid, username], i) => (
-      <Sheet username={username} uid={uid} isMine={uid === myUid} isGM={isGM} key={i} />
-    ));
+    return Object.entries(sheets)
+      .sort(([uid]) => (uid === myUid ? -1 : 1))
+      .map(([uid, username], i) => <Sheet username={username} uid={uid} isMine={uid === myUid} isGM={isGM} key={i} />);
   }, [sheets, isGM, myUid]);
 
   useEffect(() => {
