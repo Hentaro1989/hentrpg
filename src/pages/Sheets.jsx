@@ -68,15 +68,33 @@ const Sheets = () => {
         color="primary"
         fullWidth
         onClick={async () => {
-          const snapshot = await database.ref('sheets').once('value');
-          const characterName = snapshot.val()?.[auth.currentUser.uid];
+          const sheetSnapshot = await database.ref('sheets').once('value');
+          const characterName = sheetSnapshot.val()?.[auth.currentUser.uid];
           if (characterName) {
             setErrorMessage('自身のシートを削除してから追加してください。');
             setIsAlertOpen(true);
             return;
           }
 
-          await database.ref(`sheets/${auth.currentUser.uid}`).set(auth.currentUser.displayName);
+          const templateSnapshot = await database.ref(`settings/global/template`).once('value');
+          const template = templateSnapshot.val() || {};
+
+          const request = {
+            [`sheets/${auth.currentUser.uid}`]: auth.currentUser.displayName,
+            ...Object.entries(template['categories'] || {}).reduce((prev, [categoryId, categoryName]) => {
+              prev[`categories/${auth.currentUser.uid}/${categoryId}/name`] = categoryName;
+              return prev;
+            }, {}),
+            ...Object.entries(template['fields'] || {}).reduce((prev, [categoryId, fields]) => {
+              Object.entries(fields || {}).forEach(
+                ([fieldId, fieldName]) =>
+                  (prev[`fields/${auth.currentUser.uid}/${categoryId}/${fieldId}/name`] = fieldName),
+              );
+              return prev;
+            }, {}),
+          };
+
+          await database.ref().update(request);
         }}
       >
         <AddIcon />

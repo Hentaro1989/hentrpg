@@ -169,7 +169,27 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields }) => {
             disabled={!isMine && gmUid !== auth.currentUser.uid}
             onClick={async () => {
               setIsDeleteDialogOpen(false);
-              await database.ref(`sheets/${username}`).remove();
+              const templateSnapshot = await database.ref(`settings/global/template`).once('value');
+              const template = templateSnapshot.val() || {};
+
+              const request = {
+                [`sheets/${auth.currentUser.uid}`]: null,
+                ...Object.keys(template['categories'] || {}).reduce((prev, categoryId) => {
+                  prev[`categories/${auth.currentUser.uid}/${categoryId}`] = null;
+                  return prev;
+                }, {}),
+                ...Object.entries(template['fields'] || {}).reduce((prev, [categoryId, fields]) => {
+                  Object.keys(fields || {}).forEach(
+                    (fieldId) => (prev[`fields/${auth.currentUser.uid}/${categoryId}/${fieldId}`] = null),
+                  );
+                  return prev;
+                }, {}),
+              };
+              if (gmUid === auth.currentUser.uid) {
+                request[`settings/global/gm`] = null;
+              }
+
+              await database.ref().update(request);
             }}
             color="primary"
           >
