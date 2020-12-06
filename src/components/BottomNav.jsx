@@ -5,7 +5,7 @@ import BottomNavigation from '@material-ui/core/BottomNavigation';
 import BottomNavigationAction from '@material-ui/core/BottomNavigationAction';
 import { Toolbar } from '@material-ui/core';
 import DescriptionIcon from '@material-ui/icons/Description';
-import ExposureIcon from '@material-ui/icons/Exposure';
+import CasinoIcon from '@material-ui/icons/Casino';
 import SettingsIcon from '@material-ui/icons/Settings';
 import { PATHS } from '../Router';
 
@@ -37,7 +37,7 @@ const BottomNav = () => {
         className={classes.root}
       >
         <BottomNavigationAction label="シート" icon={<DescriptionIcon />} value={PATHS.SHEETS} />
-        <BottomNavigationAction label="電卓" icon={<ExposureIcon />} value={PATHS.SHEETS} />
+        <BottomNavigationAction label="ダイス" icon={<CasinoIcon />} value={PATHS.SHEETS} />
         <BottomNavigationAction label="設定" icon={<SettingsIcon />} value={PATHS.SETTINGS} />
       </BottomNavigation>
     </>

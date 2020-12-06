@@ -16,10 +16,12 @@ import {
   Grid,
   TextField,
   makeStyles,
+  withStyles,
 } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import firebase from '../firebase';
 
+const auth = firebase.auth();
 const database = firebase.database();
 
 const useStyle = makeStyles((theme) => ({
@@ -31,14 +33,20 @@ const useStyle = makeStyles((theme) => ({
     margin: theme.spacing(1, 2),
   },
   field: {
-    padding: theme.spacing(1),
+    padding: theme.spacing(0, 1, 1, 0),
+  },
+  focusingUsername: {
+    height: '0.5rem',
+    lineHeight: '0.5rem',
+    marginBottom: theme.spacing(1),
+    color: 'greenyellow',
   },
   divider: {
     marginBottom: theme.spacing(1),
   },
 }));
 
-const Sheet = ({ username, uid, isMine, isGM }) => {
+const Sheet = ({ username, uid, isMine, isGM, focusFields }) => {
   const classes = useStyle();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [categories, setCategories] = useState({});
@@ -60,11 +68,26 @@ const Sheet = ({ username, uid, isMine, isGM }) => {
           <Divider className={classes.divider} />
           <Grid container>
             {Object.entries(fields[categoryId] || {}).map(([fieldId, field]) => {
+              const focusingUsernames = Object.entries(focusFields)
+                .filter(([_, f]) => f.focusedSheetUid === uid && f.categoryId === categoryId && f.fieldId === fieldId)
+                .map(([_, f]) => f.username);
               return (
                 <Grid item xs={12} md={6} lg={3} className={classes.field} key={fieldId}>
+                  <div className={classes.focusingUsername}>{focusingUsernames.join(', ')}</div>
                   <TextField
                     label={field.name}
                     value={field.value || ''}
+                    onFocus={async () => {
+                      await database.ref(`focus/${auth.currentUser.uid}`).set({
+                        username: auth.currentUser.displayName,
+                        focusedSheetUid: uid,
+                        categoryId,
+                        fieldId,
+                      });
+                    }}
+                    // onBlur={async () => {
+                    //   await database.ref(`focus/${auth.currentUser.uid}`).remove();
+                    // }}
                     onChange={async (event) => {
                       await database.ref(`fields/${uid}/${categoryId}/${fieldId}/value`).set(event.target.value);
                     }}
@@ -80,7 +103,7 @@ const Sheet = ({ username, uid, isMine, isGM }) => {
         </Paper>
       );
     });
-  }, [categories, fields, uid, isMine, isGM, classes]);
+  }, [categories, fields, focusFields, uid, isMine, isGM, classes]);
 
   useEffect(() => {
     database.ref(`categories/${uid}`).on('value', (snapshot) => {
