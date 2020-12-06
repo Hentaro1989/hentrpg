@@ -23,7 +23,7 @@ const useStyles = makeStyles((theme) => ({
 
 const Sheets = () => {
   const classes = useStyles();
-  const [sheets, setSheets] = useState([]);
+  const [sheets, setSheets] = useState({});
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [isGM, setIsGM] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -37,7 +37,7 @@ const Sheets = () => {
 
   useEffect(() => {
     database.ref('sheets').on('value', (snapshot) => {
-      setSheets(snapshot.val() || []);
+      setSheets(snapshot.val() || {});
     });
 
     database.ref(`settings/${auth.currentUser.uid}/isGM`).on('value', (snapshot) => {

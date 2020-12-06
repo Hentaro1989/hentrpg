@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useReducer, useState } from 'react';
 import {
   Button,
   Divider,
@@ -43,6 +43,13 @@ const Sheet = ({ username, uid, isMine, isGM }) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [categories, setCategories] = useState({});
   const [fields, setFields] = useState({});
+  const [expandedState, setExpandedState] = useReducer((state, value) => {
+    const { uid, isExpanded } = value;
+    const newState = { ...state, [uid]: isExpanded };
+    window.sessionStorage.setItem('sheetExpandingStatus', JSON.stringify(newState));
+    return newState;
+  }, JSON.parse(window.sessionStorage.getItem('sheetExpandingStatus') || '{}'));
+
   const contents = useMemo(() => {
     return Object.entries(categories).map(([categoryId, category]) => {
       return (
@@ -92,7 +99,10 @@ const Sheet = ({ username, uid, isMine, isGM }) => {
 
   return (
     <>
-      <Accordion>
+      <Accordion
+        expanded={!!expandedState[uid]}
+        onChange={(_, expanded) => setExpandedState({ uid, isExpanded: expanded })}
+      >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography>{username}</Typography>
         </AccordionSummary>
