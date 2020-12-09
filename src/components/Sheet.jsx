@@ -79,7 +79,7 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields, sheets }) => {
               <Grid container>
                 <Grid item xs={12} className={classes.field}>
                   <TextField
-                    label="公開情報"
+                    label="公開情報 [全体]"
                     value={gmFields.public || ''}
                     onChange={async (event) => {
                       await database.ref(`gm/public`).set(event.target.value || null);
@@ -96,7 +96,7 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields, sheets }) => {
                 {myUid === gmUid ? (
                   <Grid item xs={12} className={classes.field}>
                     <TextField
-                      label="非公開情報"
+                      label="非公開情報 [全体]"
                       value={gmFields.private || ''}
                       onChange={async (event) => {
                         await database.ref(`gm/private`).set(event.target.value || null);
