@@ -33,7 +33,7 @@ const Sheets = () => {
     return Object.entries(sheets)
       .sort(([uid]) => (uid === auth.currentUser.uid ? -1 : 1))
       .map(([uid, username], i) => (
-        <Sheet username={username} sheetUid={uid} gmUid={gmUid} focusFields={focusFields} key={i} />
+        <Sheet username={username} sheetUid={uid} gmUid={gmUid} focusFields={focusFields} sheets={sheets} key={i} />
       ));
   }, [sheets, focusFields, gmUid]);
 

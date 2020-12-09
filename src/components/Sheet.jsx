@@ -24,6 +24,9 @@ const auth = firebase.auth();
 const database = firebase.database();
 
 const useStyle = makeStyles((theme) => ({
+  categoryGrid: {
+    margin: theme.spacing(1),
+  },
   category: {
     width: '100%',
     padding: theme.spacing(1),
@@ -41,7 +44,7 @@ const useStyle = makeStyles((theme) => ({
     color: 'greenyellow',
   },
   gmMark: {
-    marginLeft: theme.spacing(1),
+    marginRight: theme.spacing(1),
     color: 'yellow',
   },
   divider: {
@@ -49,12 +52,13 @@ const useStyle = makeStyles((theme) => ({
   },
 }));
 
-const Sheet = ({ username, sheetUid, gmUid, focusFields }) => {
+const Sheet = ({ username, sheetUid, gmUid, focusFields, sheets }) => {
   const classes = useStyle();
   const [myUid, setMyUid] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [categories, setCategories] = useState({});
   const [fields, setFields] = useState({});
+  const [gmFields, setGmFields] = useState({});
   const [expandedState, setExpandedState] = useReducer((state, value) => {
     const { uid, isExpanded } = value;
     const newState = { ...state, [uid]: isExpanded };
@@ -63,53 +67,142 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields }) => {
   }, JSON.parse(window.sessionStorage.getItem('sheetExpandingStatus') || '{}'));
   const isMine = useMemo(() => sheetUid === auth.currentUser.uid, [sheetUid]);
   const contents = useMemo(() => {
-    return Object.entries(categories).map(([categoryId, category]) => {
-      return (
-        <Paper key={categoryId} className={classes.category} variant="outlined">
-          <Typography variant="subtitle1" className={classes.categoryHeader}>
-            {category.name}
-          </Typography>
-          <Divider className={classes.divider} />
-          <Grid container>
-            {Object.entries(fields[categoryId] || {}).map(([fieldId, field]) => {
-              const focusingUsernames = Object.entries(focusFields)
-                .filter(
-                  ([_, f]) => f.focusedSheetUid === sheetUid && f.categoryId === categoryId && f.fieldId === fieldId,
-                )
-                .map(([_, f]) => f.username);
-              return (
-                <Grid item xs={12} md={6} lg={3} className={classes.field} key={fieldId}>
-                  <div className={classes.focusingUsername}>{focusingUsernames.join(', ')}</div>
+    return (
+      <Grid container>
+        {sheetUid === gmUid ? (
+          <Grid item xs={12} className={classes.categoryGrid}>
+            <Paper className={classes.category} variant="outlined" key={0}>
+              <Typography variant="subtitle1" className={classes.categoryHeader}>
+                GMシート
+              </Typography>
+              <Divider className={classes.divider} />
+              <Grid container>
+                <Grid item xs={12} className={classes.field}>
                   <TextField
-                    label={field.name}
-                    value={field.value || ''}
-                    onFocus={async () => {
-                      await database.ref(`focus/${auth.currentUser.uid}`).set({
-                        username: auth.currentUser.displayName,
-                        focusedSheetUid: sheetUid,
-                        categoryId,
-                        fieldId,
-                      });
-                    }}
-                    onBlur={async () => {
-                      await database.ref(`focus/${auth.currentUser.uid}`).remove();
-                    }}
+                    label="公開情報"
+                    value={gmFields.public || ''}
                     onChange={async (event) => {
-                      await database.ref(`fields/${sheetUid}/${categoryId}/${fieldId}/value`).set(event.target.value);
+                      await database.ref(`gm/public`).set(event.target.value || null);
                     }}
-                    disabled={!isMine && gmUid !== auth.currentUser.uid}
+                    disabled={myUid !== gmUid}
                     variant="outlined"
                     size="small"
                     fullWidth
+                    multiline
+                    rows={3}
+                    rowsMax={Number.MAX_VALUE}
                   />
+                </Grid>
+                {myUid === gmUid ? (
+                  <Grid item xs={12} className={classes.field}>
+                    <TextField
+                      label="非公開情報"
+                      value={gmFields.private || ''}
+                      onChange={async (event) => {
+                        await database.ref(`gm/private`).set(event.target.value || null);
+                      }}
+                      disabled={myUid !== gmUid}
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      multiline
+                      rows={3}
+                      rowsMax={Number.MAX_VALUE}
+                    />
+                  </Grid>
+                ) : (
+                  <></>
+                )}
+              </Grid>
+            </Paper>
+          </Grid>
+        ) : (
+          <>
+            {Object.entries(categories).map(([categoryId, category]) => {
+              return (
+                <Grid item xs={12} className={classes.categoryGrid}>
+                  <Paper key={categoryId} className={classes.category} variant="outlined">
+                    <Typography variant="subtitle1" className={classes.categoryHeader}>
+                      {category.name}
+                    </Typography>
+                    <Divider className={classes.divider} />
+                    <Grid container>
+                      {Object.entries(fields[categoryId] || {}).map(([fieldId, field]) => {
+                        const focusingUsernames = Object.entries(focusFields)
+                          .filter(
+                            ([_, f]) =>
+                              f.focusedSheetUid === sheetUid && f.categoryId === categoryId && f.fieldId === fieldId,
+                          )
+                          .map(([_, f]) => f.username);
+                        return (
+                          <Grid item xs={12} md={6} lg={3} className={classes.field} key={fieldId}>
+                            <div className={classes.focusingUsername}>{focusingUsernames.join(', ')}</div>
+                            <TextField
+                              label={field.name}
+                              value={field.value || ''}
+                              onFocus={async () => {
+                                await database.ref(`focus/${auth.currentUser.uid}`).set({
+                                  username: auth.currentUser.displayName,
+                                  focusedSheetUid: sheetUid,
+                                  categoryId,
+                                  fieldId,
+                                });
+                              }}
+                              onBlur={async () => {
+                                await database.ref(`focus/${auth.currentUser.uid}`).remove();
+                              }}
+                              onChange={async (event) => {
+                                await database
+                                  .ref(`fields/${sheetUid}/${categoryId}/${fieldId}/value`)
+                                  .set(event.target.value);
+                              }}
+                              disabled={!isMine && gmUid !== auth.currentUser.uid}
+                              variant="outlined"
+                              size="small"
+                              fullWidth
+                            />
+                          </Grid>
+                        );
+                      })}
+                    </Grid>
+                  </Paper>
                 </Grid>
               );
             })}
-          </Grid>
-        </Paper>
-      );
-    });
-  }, [categories, fields, focusFields, sheetUid, isMine, gmUid, classes]);
+            {myUid === sheetUid || myUid === gmUid ? (
+              <Grid item xs={12} className={classes.categoryGrid}>
+                <Paper className={classes.category} variant="outlined">
+                  <Typography variant="subtitle1" className={classes.categoryHeader}>
+                    {`取得した非公開情報 [${username}]`}
+                  </Typography>
+                  <Divider className={classes.divider} />
+                  <Grid container></Grid>
+                  <Grid item xs={12} className={classes.field}>
+                    <TextField
+                      label="非公開情報"
+                      value={gmFields.users?.[sheetUid] || ''}
+                      onChange={async (event) => {
+                        await database.ref(`gm/users/${sheetUid}`).set(event.target.value || null);
+                      }}
+                      disabled={myUid !== gmUid}
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      multiline
+                      rows={3}
+                      rowsMax={Number.MAX_VALUE}
+                    />
+                  </Grid>
+                </Paper>
+              </Grid>
+            ) : (
+              <></>
+            )}
+          </>
+        )}
+      </Grid>
+    );
+  }, [sheetUid, gmUid, classes, gmFields, categories, myUid, username, fields, focusFields, isMine]);
 
   useEffect(() => {
     database.ref(`categories/${sheetUid}`).on('value', (snapshot) => {
@@ -120,6 +213,10 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields }) => {
       setFields(snapshot.val() || {});
     });
 
+    database.ref(`gm`).on('value', (snapshot) => {
+      setGmFields(snapshot.val() || {});
+    });
+
     // When you logged out, "auth.currentUser" will be gone.
     // So you need to save uid as a state for unsubscribing.
     setMyUid(auth.currentUser.uid);
@@ -127,8 +224,9 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields }) => {
     return () => {
       database.ref(`categories/${sheetUid}`).off('value');
       database.ref(`fields/${sheetUid}`).off('value');
+      database.ref(`gm`).off('value');
     };
-  }, [sheetUid, myUid]);
+  }, [sheetUid]);
 
   return (
     <>
@@ -138,8 +236,13 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields }) => {
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography>
-            {username}
-            {gmUid === sheetUid ? <span className={classes.gmMark}>GM</span> : undefined}
+            {gmUid === sheetUid ? (
+              <span>
+                <span className={classes.gmMark}>GM</span>[{username}]
+              </span>
+            ) : (
+              username
+            )}
           </Typography>
         </AccordionSummary>
         <AccordionDetails>{contents}</AccordionDetails>

@@ -75,7 +75,7 @@ const Settings = () => {
   const [target, setTarget] = useState({ type: '', key: '', name: '' });
 
   const toggleGM = useCallback(async () => {
-    const updated = gmUid ? null : auth.currentUser.uid;
+    const updated = gmUid === auth.currentUser.uid ? null : auth.currentUser.uid;
     await database.ref(`settings/global/gm`).set(updated);
     setGmUid(updated);
   }, [gmUid]);
