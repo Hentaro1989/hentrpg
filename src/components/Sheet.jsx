@@ -56,6 +56,7 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields, sheets }) => {
   const classes = useStyle();
   const [myUid, setMyUid] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleteInfoDialogOpen, setIsDeleteInfoDialogOpen] = useState(false);
   const [categories, setCategories] = useState({});
   const [fields, setFields] = useState({});
   const [gmFields, setGmFields] = useState({});
@@ -173,7 +174,7 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields, sheets }) => {
               <Grid item xs={12} className={classes.categoryGrid}>
                 <Paper className={classes.category} variant="outlined">
                   <Typography variant="subtitle1" className={classes.categoryHeader}>
-                    {`取得した非公開情報 [${username}]`}
+                    {`手に入れた情報 [${username}]`}
                   </Typography>
                   <Divider className={classes.divider} />
                   <Grid container></Grid>
@@ -248,6 +249,19 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields, sheets }) => {
         <AccordionDetails>{contents}</AccordionDetails>
         <Divider />
         <AccordionActions>
+          {myUid === gmUid && myUid === sheetUid ? (
+            <Button
+              color="secondary"
+              variant="contained"
+              size="small"
+              disabled={!isMine && gmUid !== auth.currentUser.uid}
+              onClick={() => setIsDeleteInfoDialogOpen(true)}
+            >
+              全ての情報を削除
+            </Button>
+          ) : (
+            <></>
+          )}
           <Button
             color="secondary"
             variant="contained"
@@ -293,6 +307,29 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields, sheets }) => {
               }
 
               await database.ref().update(request);
+            }}
+            color="primary"
+          >
+            削除
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={isDeleteInfoDialogOpen} onClose={() => setIsDeleteInfoDialogOpen(false)}>
+        <DialogTitle>全て情報の削除</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            <Typography>本当に全ての情報を削除しますか？</Typography>
+            <Typography>GM が管理する公開・非公開情報（各PLの情報含め）全て削除されます。</Typography>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsDeleteInfoDialogOpen(false)} color="primary" autoFocus>
+            キャンセル
+          </Button>
+          <Button
+            onClick={async () => {
+              setIsDeleteInfoDialogOpen(false);
+              await database.ref().update({ [`gm`]: null });
             }}
             color="primary"
           >
