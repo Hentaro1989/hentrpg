@@ -1,15 +1,24 @@
 import React from 'react';
-import { Container, Link, Typography } from '@material-ui/core';
-import { PATHS } from '../Router';
+import { Button, Container, makeStyles, Typography } from '@material-ui/core';
+import { useHistory } from 'react-router-dom';
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    textAlign: 'center',
+  },
+}));
 
 const NotFound = () => {
+  const history = useHistory();
+  const classes = useStyles();
+
   return (
-    <Container component="main">
+    <Container component="main" className={classes.root}>
       <Typography variant="h1">404</Typography>
       <Typography variant="h2">Page Not Found</Typography>
-      <Link href={PATHS.ROOT} variant="body1">
-        TOP
-      </Link>
+      <Button variant="contained" color="primary" onClick={() => history.goBack()}>
+        戻る
+      </Button>
     </Container>
   );
 };

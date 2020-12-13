@@ -23,7 +23,7 @@ import firebase from '../firebase';
 const auth = firebase.auth();
 const database = firebase.database();
 
-const useStyle = makeStyles((theme) => ({
+const useStyles = makeStyles((theme) => ({
   categoryGrid: {
     margin: theme.spacing(1),
   },
@@ -52,8 +52,8 @@ const useStyle = makeStyles((theme) => ({
   },
 }));
 
-const Sheet = ({ username, sheetUid, gmUid, focusFields, sheets }) => {
-  const classes = useStyle();
+const Sheet = ({ username, sheetUid, gmUid, focusFields }) => {
+  const classes = useStyles();
   const [myUid, setMyUid] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleteInfoDialogOpen, setIsDeleteInfoDialogOpen] = useState(false);
@@ -83,7 +83,7 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields, sheets }) => {
                     label="公開情報 [全体]"
                     value={gmFields.public || ''}
                     onChange={async (event) => {
-                      await database.ref(`gm/public`).set(event.target.value || null);
+                      await database.ref().update({ [`gm/public`]: event.target.value || null });
                     }}
                     disabled={myUid !== gmUid}
                     variant="outlined"
@@ -100,7 +100,7 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields, sheets }) => {
                       label="非公開情報 [全体]"
                       value={gmFields.private || ''}
                       onChange={async (event) => {
-                        await database.ref(`gm/private`).set(event.target.value || null);
+                        await database.ref().update({ [`gm/private`]: event.target.value || null });
                       }}
                       disabled={myUid !== gmUid}
                       variant="outlined"
@@ -119,9 +119,9 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields, sheets }) => {
           </Grid>
         ) : (
           <>
-            {Object.entries(categories).map(([categoryId, category]) => {
+            {Object.entries(categories).map(([categoryId, category], i) => {
               return (
-                <Grid item xs={12} className={classes.categoryGrid}>
+                <Grid item xs={12} className={classes.categoryGrid} key={i}>
                   <Paper key={categoryId} className={classes.category} variant="outlined">
                     <Typography variant="subtitle1" className={classes.categoryHeader}>
                       {category.name}
@@ -183,7 +183,7 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields, sheets }) => {
                       label="非公開情報"
                       value={gmFields.users?.[sheetUid] || ''}
                       onChange={async (event) => {
-                        await database.ref(`gm/users/${sheetUid}`).set(event.target.value || null);
+                        await database.ref().update({ [`gm/users/${sheetUid}`]: event.target.value || null });
                       }}
                       disabled={myUid !== gmUid}
                       variant="outlined"
@@ -317,10 +317,8 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields, sheets }) => {
       <Dialog open={isDeleteInfoDialogOpen} onClose={() => setIsDeleteInfoDialogOpen(false)}>
         <DialogTitle>全て情報の削除</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            <Typography>本当に全ての情報を削除しますか？</Typography>
-            <Typography>GM が管理する公開・非公開情報（各PLの情報含め）全て削除されます。</Typography>
-          </DialogContentText>
+          <DialogContentText>本当に全ての情報を削除しますか？</DialogContentText>
+          <DialogContentText>GM が管理する公開・非公開情報（各PLの情報含め）全て削除されます。</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setIsDeleteInfoDialogOpen(false)} color="primary" autoFocus>

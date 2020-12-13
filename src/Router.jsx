@@ -16,10 +16,11 @@ export const PATHS = {
   SIGNIN: '/signin',
   REGISTER: '/register',
   SHEETS: '/sheets',
+  DICE: '/dice',
   SETTINGS: '/sheets/settings',
 };
 
-const useStyle = makeStyles((theme) => ({
+const useStyles = makeStyles((theme) => ({
   loading: {
     position: 'fixed',
     left: '50%',
@@ -31,25 +32,19 @@ const useStyle = makeStyles((theme) => ({
   },
 }));
 
-const PrivateRoute = ({ exact, path, isLoggedIn, children }) => {
-  const classes = useStyle();
+const PrivateRoute = ({ isLoggedIn, children }) => {
+  const classes = useStyles();
 
   switch (isLoggedIn) {
     case true:
-      return (
-        <Route exact={exact} path={path}>
-          {children}
-        </Route>
-      );
+      return children;
     case false:
       return <Redirect to={PATHS.SIGNIN} />;
     default:
       return (
-        <Route exact={exact} path={path}>
-          <div className={classes.loading}>
-            <CircularProgress size="30%" />
-          </div>
-        </Route>
+        <div className={classes.loading}>
+          <CircularProgress size="30%" />
+        </div>
       );
   }
 };
@@ -79,14 +74,20 @@ const Router = () => {
         <Route exact path={PATHS.REGISTER}>
           <Register />
         </Route>
-        <PrivateRoute path={PATHS.SHEETS} isLoggedIn={isLoggedIn}>
+        <PrivateRoute isLoggedIn={isLoggedIn}>
           <Layout>
             <Switch>
               <Route exact path={PATHS.SHEETS}>
                 <Sheets />
               </Route>
+              <Route exact path={PATHS.DICE}>
+                <Sheets />
+              </Route>
               <Route exact path={PATHS.SETTINGS}>
                 <Settings />
+              </Route>
+              <Route exact path="*">
+                <NotFound />
               </Route>
             </Switch>
           </Layout>

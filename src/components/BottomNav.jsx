@@ -37,7 +37,7 @@ const BottomNav = () => {
         className={classes.root}
       >
         <BottomNavigationAction label="シート" icon={<DescriptionIcon />} value={PATHS.SHEETS} />
-        <BottomNavigationAction label="ダイス" icon={<CasinoIcon />} value={PATHS.SHEETS} />
+        <BottomNavigationAction label="ダイス" icon={<CasinoIcon />} value={PATHS.DICE} />
         <BottomNavigationAction label="設定" icon={<SettingsIcon />} value={PATHS.SETTINGS} />
       </BottomNavigation>
     </>
