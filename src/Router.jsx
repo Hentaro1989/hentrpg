@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom';
+import { CircularProgress, makeStyles } from '@material-ui/core';
 import Layout from './components/Layout';
 import NotFound from './pages/NotFound';
 import Register from './pages/Register';
@@ -7,7 +8,6 @@ import Settings from './pages/Settings';
 import Sheets from './pages/Sheets';
 import SignIn from './pages/SignIn';
 import firebase from './firebase';
-import { CircularProgress, makeStyles } from '@material-ui/core';
 
 const auth = firebase.auth();
 
@@ -17,7 +17,7 @@ export const PATHS = {
   REGISTER: '/register',
   SHEETS: '/sheets',
   DICE: '/dice',
-  SETTINGS: '/sheets/settings',
+  SETTINGS: '/settings',
 };
 
 const useStyles = makeStyles((theme) => ({

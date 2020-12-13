@@ -1,10 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Snackbar } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
-import firebase from '../firebase';
 import { Alert } from '@material-ui/lab';
 import Sheet from '../components/Sheet';
+import Dice from './Dice';
+import { PATHS } from '../Router';
+import firebase from '../firebase';
 
 const auth = firebase.auth();
 const database = firebase.database();
@@ -27,7 +30,9 @@ const Sheets = () => {
   const [gmUid, setGmUid] = useState(null);
   const [focusFields, setFocusFields] = useState({});
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isDiceDialogOpen, setIsDiceDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const history = useHistory();
 
   const sheetElements = useMemo(() => {
     return Object.entries(sheets)
@@ -58,6 +63,16 @@ const Sheets = () => {
       database.ref(`settings/global/gm`).off('value');
     };
   }, []);
+
+  useEffect(() => {
+    const unregister = history.listen((location) => {
+      setIsDiceDialogOpen(location.pathname === PATHS.DICE);
+    });
+
+    return () => {
+      unregister();
+    };
+  }, [history]);
 
   return (
     <div className={classes.root}>
@@ -102,6 +117,13 @@ const Sheets = () => {
       <Snackbar open={isAlertOpen} onClose={() => setIsAlertOpen(false)}>
         <Alert severity="error">{errorMessage}</Alert>
       </Snackbar>
+      <Dice
+        isDiceDialogOpen={isDiceDialogOpen}
+        close={() => {
+          setIsDiceDialogOpen(false);
+          history.push(PATHS.SHEETS);
+        }}
+      />
     </div>
   );
 };

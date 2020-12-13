@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import { makeStyles } from '@material-ui/core/styles';
 import BottomNavigation from '@material-ui/core/BottomNavigation';
@@ -23,6 +23,16 @@ const BottomNav = () => {
   const history = useHistory();
   const classes = useStyles();
   const [value, setValue] = React.useState(history.location.pathname);
+
+  useEffect(() => {
+    const unregister = history.listen((location) => {
+      setValue(location.pathname);
+    });
+
+    return () => {
+      unregister();
+    };
+  }, [history]);
 
   return (
     <>
