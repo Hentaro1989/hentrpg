@@ -69,6 +69,8 @@ const Sheets = () => {
       setIsDiceDialogOpen(location.pathname === PATHS.DICE);
     });
 
+    setIsDiceDialogOpen(history.location.pathname === PATHS.DICE);
+
     return () => {
       unregister();
     };
