@@ -12,6 +12,7 @@
     "@material-ui/icons": "^4.9.1",
     "@material-ui/lab": "^4.0.0-alpha.56",
     "firebase": "^8.1.1",
+    "notistack": "^1.0.2",
     "react": "16.14.0",
     "react-dom": "16.14.0",
     "react-hook-form": "^6.12.0",

@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useHistory } from 'react-router-dom';
+import { useSnackbar } from 'notistack';
 import { makeStyles } from '@material-ui/core/styles';
 import { Button, Snackbar } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
-import { Alert } from '@material-ui/lab';
+import { Alert, AlertTitle } from '@material-ui/lab';
 import Sheet from '../components/Sheet';
 import Dice from './Dice';
 import { PATHS } from '../Router';
@@ -26,13 +27,16 @@ const useStyles = makeStyles((theme) => ({
 
 const Sheets = () => {
   const classes = useStyles();
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const history = useHistory();
+
   const [sheets, setSheets] = useState({});
   const [gmUid, setGmUid] = useState(null);
   const [focusFields, setFocusFields] = useState({});
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [isDiceDialogOpen, setIsDiceDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const history = useHistory();
+  const [mountedTime] = useState(Date.now());
 
   const sheetElements = useMemo(() => {
     return Object.entries(sheets)
@@ -55,14 +59,45 @@ const Sheets = () => {
       setGmUid(snapshot.val());
     });
 
+    database.ref(`dice`).on('value', (snapshot) => {
+      const latest = Object.values(snapshot.val() || [])
+        .reduce((prev, current) => [...prev, ...current], [])
+        .sort((a, b) => {
+          if (a.time < b.time) {
+            return 1;
+          } else if (a.time > b.time) {
+            return -1;
+          } else {
+            return 0;
+          }
+        })[0];
+
+      if (latest && latest.time > mountedTime) {
+        enqueueSnackbar(`結果： ${latest.result}`, {
+          variant: 'info',
+          anchorOrigin: { vertical: 'top', horizontal: 'right' },
+          autoHideDuration: 5000,
+          content: (key, message) => {
+            return (
+              <Alert key={key} severity="info" onClick={() => closeSnackbar(key)}>
+                <AlertTitle>{`${latest.name} のダイスロール！`}</AlertTitle>
+                {message}
+              </Alert>
+            );
+          },
+        });
+      }
+    });
+
     database.ref(`focus/${auth.currentUser.uid}`).remove();
 
     return () => {
-      database.ref('sheets').off('value');
-      database.ref(`focus`).off('value');
-      database.ref(`settings/global/gm`).off('value');
+      database.ref('sheets').off();
+      database.ref(`focus`).off();
+      database.ref(`settings/global/gm`).off();
+      database.ref(`dice`).off();
     };
-  }, []);
+  }, [closeSnackbar, enqueueSnackbar, mountedTime]);
 
   useEffect(() => {
     const unregister = history.listen((location) => {

@@ -129,7 +129,7 @@ const Dice = ({ isDiceDialogOpen, close = () => undefined }) => {
               onClick={async () => {
                 setIsThrowButtonDisabled(true);
                 const result = Math.ceil(Math.random() * diceConfig.number * diceConfig.faces);
-                const newLog = [...diceLog, { result, time: Date.now() }];
+                const newLog = [...diceLog, { result, time: Date.now(), name: auth.currentUser.displayName }];
                 if (newLog.length > 10) {
                   newLog.shift();
                 }
