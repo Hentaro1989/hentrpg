@@ -78,7 +78,7 @@ const Sheets = () => {
 
   return (
     <div className={classes.root}>
-      {sheetElements}
+      <div>{sheetElements}</div>
       <Button
         className={classes.addSheetButton}
         variant="contained"
