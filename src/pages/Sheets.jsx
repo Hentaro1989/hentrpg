@@ -155,6 +155,7 @@ const Sheets = () => {
         <Alert severity="error">{errorMessage}</Alert>
       </Snackbar>
       <Dice
+        myUid={auth.currentUser.uid}
         isDiceDialogOpen={isDiceDialogOpen}
         close={() => {
           setIsDiceDialogOpen(false);

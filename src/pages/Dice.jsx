@@ -35,7 +35,7 @@ const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const Dice = ({ isDiceDialogOpen, close = () => undefined }) => {
+const Dice = ({ myUid, isDiceDialogOpen, close = () => undefined }) => {
   const classes = useStyles();
   const [diceConfig, setDiceConfig] = useReducer((_, value) => {
     window.localStorage.setItem('diceConfig', JSON.stringify(value));
@@ -46,14 +46,14 @@ const Dice = ({ isDiceDialogOpen, close = () => undefined }) => {
   const [diceLog, setDiceLog] = useState([]);
 
   useEffect(() => {
-    database.ref(`dice/${auth.currentUser.uid}`).on('value', (snapshot) => {
+    database.ref(`dice/${myUid}`).on('value', (snapshot) => {
       setDiceLog(snapshot.val() || []);
     });
 
     return () => {
-      database.ref(`dice/${auth.currentUser.uid}`).off();
+      database.ref(`dice/${myUid}`).off();
     };
-  }, []);
+  }, [myUid]);
 
   return (
     <Dialog open={isDiceDialogOpen} onClose={close} TransitionComponent={Transition}>
@@ -133,7 +133,7 @@ const Dice = ({ isDiceDialogOpen, close = () => undefined }) => {
                 if (newLog.length > 10) {
                   newLog.shift();
                 }
-                await database.ref().update({ [`dice/${auth.currentUser.uid}`]: newLog });
+                await database.ref().update({ [`dice/${myUid}`]: newLog });
                 setResult(result);
                 setIsThrowButtonDisabled(false);
               }}

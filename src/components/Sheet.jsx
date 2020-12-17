@@ -60,6 +60,7 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields }) => {
   const [categories, setCategories] = useState({});
   const [fields, setFields] = useState({});
   const [gmFields, setGmFields] = useState({});
+  const [diceLog, setDiceLog] = useState({});
   const [expandedState, setExpandedState] = useReducer((state, value) => {
     const { uid, isExpanded } = value;
     const newState = { ...state, [uid]: isExpanded };
@@ -199,11 +200,46 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields }) => {
             ) : (
               <></>
             )}
+            {
+              <Grid item xs={12} className={classes.categoryGrid}>
+                <Paper className={classes.category} variant="outlined">
+                  <Typography variant="subtitle1" className={classes.categoryHeader}>
+                    {`ダイスログ [${username}]`}
+                  </Typography>
+                  <Divider className={classes.divider} />
+                  <Grid container></Grid>
+                  <Grid item xs={12} className={classes.field}>
+                    <TextField
+                      label="ダイスログ"
+                      value={Object.values(diceLog)
+                        .sort((a, b) => {
+                          if (a.time < b.time) {
+                            return 1;
+                          } else if (a.time > b.time) {
+                            return -1;
+                          } else {
+                            return 0;
+                          }
+                        })
+                        .map(({ result, time }) => `${new Date(time).toLocaleString('ja-JP')}\t結果：${result}`)
+                        .join('\n')}
+                      disabled={true}
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      multiline
+                      rows={3}
+                      rowsMax={Number.MAX_VALUE}
+                    />
+                  </Grid>
+                </Paper>
+              </Grid>
+            }
           </>
         )}
       </Grid>
     );
-  }, [sheetUid, gmUid, classes, gmFields, categories, myUid, username, fields, focusFields, isMine]);
+  }, [sheetUid, gmUid, classes, gmFields, myUid, categories, username, diceLog, fields, focusFields, isMine]);
 
   useEffect(() => {
     database.ref(`categories/${sheetUid}`).on('value', (snapshot) => {
@@ -218,14 +254,19 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields }) => {
       setGmFields(snapshot.val() || {});
     });
 
+    database.ref(`dice/${sheetUid}`).on('value', (snapshot) => {
+      setDiceLog(snapshot.val() || {});
+    });
+
     // When you logged out, "auth.currentUser" will be gone.
     // So you need to save uid as a state for unsubscribing.
     setMyUid(auth.currentUser.uid);
 
     return () => {
-      database.ref(`categories/${sheetUid}`).off('value');
-      database.ref(`fields/${sheetUid}`).off('value');
-      database.ref(`gm`).off('value');
+      database.ref(`categories/${sheetUid}`).off();
+      database.ref(`fields/${sheetUid}`).off();
+      database.ref(`gm`).off();
+      database.ref(`dice/${sheetUid}`).off();
     };
   }, [sheetUid]);
 
@@ -317,8 +358,8 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields }) => {
       <Dialog open={isDeleteInfoDialogOpen} onClose={() => setIsDeleteInfoDialogOpen(false)}>
         <DialogTitle>全て情報の削除</DialogTitle>
         <DialogContent>
-          <DialogContentText>本当に全ての情報を削除しますか？</DialogContentText>
-          <DialogContentText>GM が管理する公開・非公開情報（各PLの情報含め）全て削除されます。</DialogContentText>
+          <DialogContentText>GM, PL が所持する全ての情報・ダイスログが削除されます。</DialogContentText>
+          <DialogContentText>本当に削除しますか？</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setIsDeleteInfoDialogOpen(false)} color="primary" autoFocus>
@@ -327,7 +368,10 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields }) => {
           <Button
             onClick={async () => {
               setIsDeleteInfoDialogOpen(false);
-              await database.ref().update({ [`gm`]: null });
+              await database.ref().update({
+                [`dice`]: null,
+                [`gm`]: null,
+              });
             }}
             color="primary"
           >
