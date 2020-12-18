@@ -1,6 +1,32 @@
 {
   "rules": {
-    ".read": "auth != null",
-    ".write": "auth != null"
+    "categories": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "fields": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "focus": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "gm": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "settings": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "sheets": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "dice": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
   }
 }
