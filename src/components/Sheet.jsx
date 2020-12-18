@@ -23,6 +23,8 @@ import firebase from '../firebase';
 const auth = firebase.auth();
 const database = firebase.database();
 
+const getSheetExpandingStatus = () => JSON.parse(window.sessionStorage.getItem('sheetExpandingStatus') || '{}');
+
 const useStyles = makeStyles((theme) => ({
   categoryGrid: {
     margin: theme.spacing(1),
@@ -61,12 +63,12 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields }) => {
   const [fields, setFields] = useState({});
   const [gmFields, setGmFields] = useState({});
   const [diceLog, setDiceLog] = useState({});
-  const [expandedState, setExpandedState] = useReducer((state, value) => {
+  const [expandedState, setExpandedState] = useReducer((_, value) => {
     const { uid, isExpanded } = value;
-    const newState = { ...state, [uid]: isExpanded };
+    const newState = { ...getSheetExpandingStatus(), [uid]: isExpanded };
     window.sessionStorage.setItem('sheetExpandingStatus', JSON.stringify(newState));
     return newState;
-  }, JSON.parse(window.sessionStorage.getItem('sheetExpandingStatus') || '{}'));
+  }, getSheetExpandingStatus());
   const isMine = useMemo(() => sheetUid === auth.currentUser.uid, [sheetUid]);
   const contents = useMemo(() => {
     return (
