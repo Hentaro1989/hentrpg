@@ -23,6 +23,9 @@ const useStyles = makeStyles((theme) => ({
   addSheetButton: {
     marginTop: theme.spacing(1),
   },
+  alert: {
+    padding: '0 16px',
+  },
 }));
 
 const Sheets = () => {
@@ -76,10 +79,9 @@ const Sheets = () => {
         enqueueSnackbar(`結果： ${latest.result}`, {
           variant: 'info',
           anchorOrigin: { vertical: 'top', horizontal: 'right' },
-          autoHideDuration: 5000,
           content: (key, message) => {
             return (
-              <Alert key={key} severity="info" onClick={() => closeSnackbar(key)}>
+              <Alert key={key} severity="info" onClick={() => closeSnackbar(key)} className={classes.alert}>
                 <AlertTitle>{`${latest.name} のダイスロール！`}</AlertTitle>
                 {message}
               </Alert>

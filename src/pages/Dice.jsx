@@ -24,6 +24,7 @@ const useStyles = makeStyles((theme) => ({
     textAlign: 'center',
   },
   slider: {
+    marginTop: theme.spacing(2),
     padding: theme.spacing(1),
   },
   result: {
@@ -65,7 +66,6 @@ const Dice = ({ myUid, isDiceDialogOpen, close = () => undefined }) => {
           </Grid>
           <Grid item xs={6} className={classes.slider}>
             <Slider
-              style={{ marginTop: '1.5rem' }}
               min={1}
               max={24}
               value={diceConfig.number}
@@ -75,7 +75,6 @@ const Dice = ({ myUid, isDiceDialogOpen, close = () => undefined }) => {
           </Grid>
           <Grid item xs={6} className={classes.slider}>
             <Slider
-              style={{ marginTop: '1.5rem' }}
               min={1}
               max={100}
               value={diceConfig.faces}
