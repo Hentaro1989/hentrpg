@@ -75,7 +75,7 @@ const Dice = ({ myUid, isDiceDialogOpen, close = () => undefined }) => {
           </Grid>
           <Grid item xs={6} className={classes.slider}>
             <Slider
-              min={1}
+              min={3}
               max={100}
               value={diceConfig.faces}
               onChange={(_, value) => setDiceConfig({ ...diceConfig, faces: value })}
@@ -103,7 +103,7 @@ const Dice = ({ myUid, isDiceDialogOpen, close = () => undefined }) => {
           <Grid item xs={3}>
             <IconButton
               color="primary"
-              disabled={diceConfig.faces < 2}
+              disabled={diceConfig.faces < 4}
               onClick={() => setDiceConfig({ ...diceConfig, faces: diceConfig.faces - 1 })}
             >
               <ArrowBackIcon />

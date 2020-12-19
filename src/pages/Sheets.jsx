@@ -99,7 +99,7 @@ const Sheets = () => {
       database.ref(`settings/global/gm`).off();
       database.ref(`dice`).off();
     };
-  }, [closeSnackbar, enqueueSnackbar, mountedTime]);
+  }, [classes, closeSnackbar, enqueueSnackbar, mountedTime]);
 
   useEffect(() => {
     const unregister = history.listen((location) => {
