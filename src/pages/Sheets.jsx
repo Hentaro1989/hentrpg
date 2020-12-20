@@ -64,7 +64,10 @@ const Sheets = () => {
 
     database.ref(`dice`).on('value', (snapshot) => {
       const latest = Object.values(snapshot.val() || [])
-        .reduce((prev, current) => [...prev, ...current], [])
+        .reduce((prev, current) => {
+          prev.push(...Object.values(current));
+          return prev;
+        }, [])
         .sort((a, b) => {
           if (a.time < b.time) {
             return 1;
