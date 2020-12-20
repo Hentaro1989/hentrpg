@@ -11,6 +11,8 @@ import {
   makeStyles,
   Typography,
   IconButton,
+  Checkbox,
+  FormControlLabel,
 } from '@material-ui/core';
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
@@ -36,12 +38,12 @@ const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const Dice = ({ myUid, isDiceDialogOpen, close = () => undefined }) => {
+const Dice = ({ myUid, gmUid, isDiceDialogOpen, close = () => undefined }) => {
   const classes = useStyles();
   const [diceConfig, setDiceConfig] = useReducer((_, value) => {
     window.localStorage.setItem('diceConfig', JSON.stringify(value));
     return value;
-  }, JSON.parse(window.localStorage.getItem('diceConfig') || '{ "number": 1, "faces": 6 }'));
+  }, JSON.parse(window.localStorage.getItem('diceConfig') || '{ "number": 1, "faces": 6, "hide": false }'));
   const [result, setResult] = useState(0);
   const [isThrowButtonDisabled, setIsThrowButtonDisabled] = useState(false);
   const [diceLog, setDiceLog] = useState([]);
@@ -132,7 +134,9 @@ const Dice = ({ myUid, isDiceDialogOpen, close = () => undefined }) => {
                 if (newLog.length > 10) {
                   newLog.shift();
                 }
-                await database.ref().update({ [`dice/${myUid}`]: newLog });
+                if (myUid !== gmUid || (myUid === gmUid && !diceConfig.hide)) {
+                  await database.ref().update({ [`dice/${myUid}`]: newLog });
+                }
                 setResult(result);
                 setIsThrowButtonDisabled(false);
               }}
@@ -144,6 +148,19 @@ const Dice = ({ myUid, isDiceDialogOpen, close = () => undefined }) => {
         </Grid>
       </DialogContent>
       <DialogActions>
+        {myUid === gmUid ? (
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={diceConfig.hide}
+                onChange={(_, checked) => setDiceConfig({ ...diceConfig, hide: checked })}
+              />
+            }
+            label="結果を隠す"
+          />
+        ) : (
+          <></>
+        )}
         <Button onClick={close} color="primary">
           閉じる
         </Button>

@@ -161,6 +161,7 @@ const Sheets = () => {
       </Snackbar>
       <Dice
         myUid={auth.currentUser.uid}
+        gmUid={gmUid}
         isDiceDialogOpen={isDiceDialogOpen}
         close={() => {
           setIsDiceDialogOpen(false);
