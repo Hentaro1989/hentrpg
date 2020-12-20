@@ -202,43 +202,43 @@ const Sheet = ({ username, sheetUid, gmUid, focusFields }) => {
             ) : (
               <></>
             )}
-            {
-              <Grid item xs={12} className={classes.categoryGrid}>
-                <Paper className={classes.category} variant="outlined">
-                  <Typography variant="subtitle1" className={classes.categoryHeader}>
-                    {`ダイスログ [${username}]`}
-                  </Typography>
-                  <Divider className={classes.divider} />
-                  <Grid container></Grid>
-                  <Grid item xs={12} className={classes.field}>
-                    <TextField
-                      label="ダイスログ"
-                      value={Object.values(diceLog)
-                        .sort((a, b) => {
-                          if (a.time < b.time) {
-                            return 1;
-                          } else if (a.time > b.time) {
-                            return -1;
-                          } else {
-                            return 0;
-                          }
-                        })
-                        .map(({ result, time }) => `${new Date(time).toLocaleString('ja-JP')}\t結果：${result}`)
-                        .join('\n')}
-                      disabled={true}
-                      variant="outlined"
-                      size="small"
-                      fullWidth
-                      multiline
-                      rows={3}
-                      rowsMax={Number.MAX_VALUE}
-                    />
-                  </Grid>
-                </Paper>
-              </Grid>
-            }
           </>
         )}
+        {
+          <Grid item xs={12} className={classes.categoryGrid}>
+            <Paper className={classes.category} variant="outlined">
+              <Typography variant="subtitle1" className={classes.categoryHeader}>
+                {`ダイスログ [${username}]`}
+              </Typography>
+              <Divider className={classes.divider} />
+              <Grid container></Grid>
+              <Grid item xs={12} className={classes.field}>
+                <TextField
+                  label="ダイスログ"
+                  value={Object.values(diceLog)
+                    .sort((a, b) => {
+                      if (a.time < b.time) {
+                        return 1;
+                      } else if (a.time > b.time) {
+                        return -1;
+                      } else {
+                        return 0;
+                      }
+                    })
+                    .map(({ result, time }) => `${new Date(time).toLocaleString('ja-JP')}\t結果：${result}`)
+                    .join('\n')}
+                  disabled={true}
+                  variant="outlined"
+                  size="small"
+                  fullWidth
+                  multiline
+                  rows={3}
+                  rowsMax={Number.MAX_VALUE}
+                />
+              </Grid>
+            </Paper>
+          </Grid>
+        }
       </Grid>
     );
   }, [sheetUid, gmUid, classes, gmFields, myUid, categories, username, diceLog, fields, focusFields, isMine]);
